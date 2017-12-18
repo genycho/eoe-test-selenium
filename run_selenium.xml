@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="eoe_guitest" default="all-test" basedir=".">
+
+	<property file="./run_selenium.properties" />
+	<path id="testcompile.classpath">
+		<fileset dir="${test.lib}" includes="**/*.jar" />
+	</path>
+
+	<target name="common" depends="clean, test-compile" />
+
+	<target name="ff-test" depends="test-compile, runtest-firefox" />
+	<target name="ie-test" depends="test-compile, runtest-ie" />
+	<target name="chrome-test" depends="test-compile,runtest-chrome" />
+	<target name="all-test" depends="clean, test-compile, runtest-firefox, runtest-ie, runtest-chrome" />
+
+	<!-- 할 일. 각 브라우저별로 테스트 결과 폴더를 분리해서 떨구도록 -->
+	<target name="clean">
+		<delete dir="${test.report.dir}" />
+		<mkdir dir="${test.report.dir}" />
+	</target>
+
+	<target name="test-compile">
+		<delete dir="${test.bin}" />
+		<mkdir dir="${test.bin}" />
+		<javac srcdir="${test.src}" destdir="${test.bin}" includes="**/*.java" includeantruntime="false" debug="true" encoding="utf-8">
+			<classpath refid="testcompile.classpath" />
+		</javac>
+	</target>
+
+	<target name="integrationtest"  depends="test-compile">
+		<delete dir="${test.report.dir}/integrationtest" />
+		<mkdir dir="${test.report.dir}/integrationtest" />
+		
+			<junit haltonfailure="no" fork="true" forkmode="once" printsummary="on" >
+				<classpath location="${test.bin}" />
+				<classpath refid="testcompile.classpath" />
+
+				<sysproperty key="TARGET_BROWSER" value="${TARGET_BROWSER}" />
+				<sysproperty key="SELENIUM_TESTENV" value="${SELENIUM_TESTENV}" />
+					
+				<batchtest fork="yes" todir="${test.report.dir}/integrationtest">
+					<fileset dir="${test.src}">
+						<include name="**/*IntegrationTest.java" />
+					</fileset>
+					<formatter type="xml" />
+				</batchtest>
+			</junit>
+			
+			<junitreport>
+				<fileset dir="${test.report.dir}/integrationtest">
+					<include name="TEST-*.xml" />
+				</fileset>
+				<report todir="${test.report.dir}/integrationtest" />
+			</junitreport>
+		</target>
+	
+	<target name="functionaltest" depends="test-compile">
+		<delete dir="${test.report.dir}/functionaltest" />
+		<mkdir dir="${test.report.dir}/functionaltest" />
+		
+			<junit haltonfailure="no" fork="true" forkmode="once" printsummary="on" >
+				<classpath location="${test.bin}" />
+				<classpath refid="testcompile.classpath" />
+
+				<sysproperty key="TARGET_BROWSER" value="${TARGET_BROWSER}" />
+				<sysproperty key="SELENIUM_TESTENV" value="${SELENIUM_TESTENV}" />
+					
+				<batchtest fork="yes" todir="${test.report.dir}/functionaltest">
+					<fileset dir="${test.src}">
+						<include name="**/*Test.java" />
+						<exclude name="**/*IntegrationTest.java" />
+					</fileset>
+					<formatter type="xml" />
+				</batchtest>
+			</junit>
+			
+			<junitreport>
+				<fileset dir="${test.report.dir}/functionaltest">
+					<include name="TEST-*.xml" />
+				</fileset>
+				<report todir="${test.report.dir}/functionaltest" />
+			</junitreport>
+		</target>
+	
+	<target name="runtest-ie">
+		<delete dir="${test.report.dir}/ie" />
+		<mkdir dir="${test.report.dir}/ie" />
+		<!-- <junit haltonfailure="no" fork="true" forkmode="once" printsummary="on" failureproperty="test.failed" errorproperty="test.failed"> -->
+		<junit haltonfailure="no" fork="true" forkmode="once" printsummary="on" >
+			<classpath location="${test.bin}" />
+			<classpath refid="testcompile.classpath" />
+
+			<sysproperty key="TARGET_BROWSER" value="IE" />
+			<sysproperty key="SELENIUM_TESTENV" value="DEV" />
+
+			<batchtest fork="yes" todir="${test.report.dir}/ie">
+				<fileset dir="${test.src}">
+					<include name="**/*Test.java" />
+					<exclude name="**/IntegrationTest.java" />
+				</fileset>
+				<formatter type="xml" />
+			</batchtest>
+		</junit>
+		
+		<junitreport>
+			<fileset dir="${test.report.dir}/ie">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report todir="${test.report.dir}" />
+		</junitreport>
+	</target>
+
+	<target name="runtest-firefox">
+		<delete dir="${test.report.dir}/firefox" />
+		<mkdir dir="${test.report.dir}/firefox" />
+		<junit haltonfailure="no" fork="true" forkmode="once" printsummary="on">
+			<classpath location="${test.bin}" />
+			<classpath refid="testcompile.classpath" />
+
+			<sysproperty key="TARGET_BROWSER" value="FIREFOX" />
+			<sysproperty key="SELENIUM_TESTENV" value="DEV" />
+
+			<batchtest fork="yes" todir="${test.report.dir}/firefox">
+				<fileset dir="${test.src}">
+					<include name="**/*Test.java" />
+					<exclude name="**/IntegrationTest.java" />
+				</fileset>
+				<formatter type="xml" />
+			</batchtest>
+		</junit>
+		
+		<junitreport todir="${test.report.dir}/firefox">
+			<fileset dir="${test.report.dir}/firefox">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report todir="${test.report.dir}/firefox" />
+		</junitreport>
+	</target>
+
+	<target name="runtest-chrome">
+		<delete dir="${test.report.dir}/chrome" />
+		<mkdir dir="${test.report.dir}/chrome" />
+		<!-- <junit haltonfailure="no" fork="true" forkmode="once" printsummary="on" failureproperty="test.failed" errorproperty="test.failed"> -->
+		<junit haltonfailure="no" fork="true" forkmode="once" printsummary="on" >
+			<classpath location="${test.bin}" />
+			<classpath refid="testcompile.classpath" />
+
+			<sysproperty key="TARGET_BROWSER" value="CHROME" />
+			<sysproperty key="SELENIUM_TESTENV" value="DEV" />
+
+			<batchtest fork="yes" todir="${test.report.dir}/chrome">
+				<fileset dir="${test.src}">
+					<include name="**/*Test.java" />
+					<exclude name="**/IntegrationTest.java" />
+				</fileset>
+				<formatter type="xml" />
+			</batchtest>
+		</junit>
+		
+		<junitreport>
+			<fileset dir="${test.report.dir}/chrome">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report todir="${test.report.dir}/chrome" />
+		</junitreport>
+	</target>
+
+	<target name="mvn-test-htmlreport">
+		<junitreport todir="${test.report.dir}">
+			<fileset dir="${test.report.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<!-- <report todir="${test.report.dir}" /> -->
+		</junitreport>
+	</target>
+
+</project>
